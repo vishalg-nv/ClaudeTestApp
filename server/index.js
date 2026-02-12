@@ -177,6 +177,6 @@ app.post('/api/posts/:id/vote', (req, res) => {
   res.json({ ...result, user_vote: value === 0 ? null : value });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on http://0.0.0.0:${PORT}`);
 });
