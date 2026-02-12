@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RedditLite</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#dae0e6;--card:#fff;--header:#1a1a2e;--text:#1c1c1c;--text2:#787c7e;--link:#0079d3;--accent:#ff4500;--accent2:#cc3700;--up:#ff4500;--down:#7193ff;--border:#ccc;--border2:#edeff1;--r:4px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh}
+.header{background:var(--header);color:#fff;padding:0 16px;height:48px;position:sticky;top:0;z-index:100;box-shadow:0 2px 4px rgba(0,0,0,.15)}
+.header-inner{max-width:800px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:100%}
+.logo{font-size:1.25rem;font-weight:700;color:var(--accent);letter-spacing:-.5px}
+.user-info{display:flex;align-items:center;gap:12px;font-size:.875rem;font-weight:600}
+.btn-logout{background:0 0;border:1px solid rgba(255,255,255,.3);color:#fff;padding:4px 12px;border-radius:var(--r);cursor:pointer;font-size:.8rem}
+.btn-logout:hover{border-color:#fff}
+.main{max-width:800px;margin:16px auto;padding:0 16px}
+.login-bg{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--header)}
+.login-card{background:var(--card);border-radius:8px;padding:48px;text-align:center;max-width:400px;width:100%;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.login-card h1{color:var(--accent);font-size:1.75rem;margin-bottom:8px}
+.login-card p{color:var(--text2);margin-bottom:24px}
+.login-card form{display:flex;flex-direction:column;gap:12px}
+.login-card input{padding:12px;border:1px solid var(--border);border-radius:var(--r);font-size:1rem;outline:0}
+.login-card input:focus{border-color:var(--accent)}
+.login-card button{background:var(--accent);color:#fff;border:0;padding:12px;border-radius:var(--r);font-size:1rem;font-weight:600;cursor:pointer}
+.login-card button:hover:not(:disabled){background:var(--accent2)}
+.login-card button:disabled{opacity:.5;cursor:not-allowed}
+.create-bar{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);padding:8px 12px;margin-bottom:12px;cursor:text}
+.create-bar input{width:100%;border:1px solid var(--border2);border-radius:var(--r);padding:8px 12px;font-size:.9rem;outline:0;cursor:pointer;background:#f6f7f8}
+.create-bar input:hover{border-color:var(--link)}
+.post-form{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
+.tabs{display:flex;border-bottom:1px solid var(--border2)}
+.tab{flex:1;padding:12px;border:0;background:0 0;font-size:.9rem;font-weight:600;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent}
+.tab.active{color:var(--link);border-bottom-color:var(--link)}
+.tab:hover:not(.active){background:#f6f7f8}
+.form-body{padding:16px;display:flex;flex-direction:column;gap:12px}
+.form-body input,.form-body textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);font-size:.9rem;font-family:inherit;outline:0;resize:vertical}
+.form-body input:focus,.form-body textarea:focus{border-color:var(--link)}
+.form-actions{display:flex;justify-content:flex-end;gap:8px}
+.form-actions button{padding:8px 20px;border-radius:999px;font-size:.85rem;font-weight:700;cursor:pointer}
+.btn-post{background:var(--accent);color:#fff;border:0}
+.btn-post:hover:not(:disabled){background:var(--accent2)}
+.btn-post:disabled{opacity:.5;cursor:not-allowed}
+.btn-cancel{background:0 0;border:1px solid var(--border);color:var(--text2)}
+.btn-cancel:hover{background:#f6f7f8}
+.sort-bar{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);padding:8px 12px;margin-bottom:12px;display:flex;gap:4px}
+.sort-btn{border:0;background:0 0;padding:6px 16px;border-radius:999px;font-size:.85rem;font-weight:600;color:var(--text2);cursor:pointer}
+.sort-btn:hover{background:#e8e8e8}
+.sort-btn.active{background:#e8e8e8;color:var(--link)}
+.post-list{display:flex;flex-direction:column;gap:8px}
+.post-card{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);display:flex;overflow:hidden;transition:border-color .15s}
+.post-card:hover{border-color:#898989}
+.votes{display:flex;flex-direction:column;align-items:center;padding:8px 4px;background:#f8f9fa;min-width:44px;gap:2px}
+.vote-btn{border:0;background:0 0;cursor:pointer;font-size:.9rem;padding:2px 6px;border-radius:2px;color:var(--text2);line-height:1}
+.vote-btn:hover{background:#e0e0e0}
+.vote-btn.up-active{color:var(--up)}
+.vote-btn.down-active{color:var(--down)}
+.score{font-size:.8rem;font-weight:700;min-width:20px;text-align:center}
+.score.pos{color:var(--up)}
+.score.neg{color:var(--down)}
+.post-body{flex:1;padding:8px 12px;min-width:0}
+.title-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px}
+.post-title{font-size:1.05rem;font-weight:600;color:var(--text);text-decoration:none;word-break:break-word}
+a.post-title:hover{color:var(--link)}
+.domain{font-size:.75rem;color:var(--text2);white-space:nowrap}
+.body-text{margin-top:6px;font-size:.9rem;line-height:1.6;word-break:break-word}
+.meta{margin-top:6px;font-size:.75rem;color:var(--text2);display:flex;gap:8px;align-items:center}
+.btn-del{border:0;background:0 0;color:var(--text2);cursor:pointer;font-size:.75rem;font-weight:700;padding:2px 4px}
+.btn-del:hover{color:var(--accent)}
+.empty{text-align:center;padding:48px 16px;color:var(--text2);background:var(--card);border:1px solid var(--border2);border-radius:var(--r)}
+.error{color:#d93025;font-size:.85rem;margin-top:4px}
+@media(max-width:600px){.main{padding:0 8px}.login-card{padding:32px 24px;margin:16px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// --- Data layer (localStorage) ---
+const STORAGE = {
+  getUser() { const u = localStorage.getItem('rl_user'); return u ? JSON.parse(u) : null; },
+  setUser(u) { localStorage.setItem('rl_user', JSON.stringify(u)); },
+  clearUser() { localStorage.removeItem('rl_user'); },
+  getPosts() { const p = localStorage.getItem('rl_posts'); return p ? JSON.parse(p) : []; },
+  savePosts(p) { localStorage.setItem('rl_posts', JSON.stringify(p)); },
+  getVotes() { const v = localStorage.getItem('rl_votes'); return v ? JSON.parse(v) : {}; },
+  saveVotes(v) { localStorage.setItem('rl_votes', JSON.stringify(v)); },
+  getNextId() { let id = parseInt(localStorage.getItem('rl_nextid') || '1'); localStorage.setItem('rl_nextid', String(id + 1)); return id; }
+};
+
+// --- App state ---
+let state = {
+  user: STORAGE.getUser(),
+  posts: STORAGE.getPosts(),
+  votes: STORAGE.getVotes(), // { "postId:username": 1 or -1 }
+  sort: 'hot',
+  formOpen: false,
+  formType: 'link'
+};
+
+function getVoteKey(postId) { return postId + ':' + state.user.username; }
+
+function getScore(postId) {
+  const votes = state.votes;
+  let score = 0;
+  for (const key in votes) {
+    if (key.startsWith(postId + ':')) score += votes[key];
+  }
+  return score;
+}
+
+function getUserVote(postId) {
+  return state.votes[getVoteKey(postId)] || 0;
+}
+
+function timeAgo(ts) {
+  const secs = Math.floor((Date.now() - ts) / 1000);
+  if (secs < 60) return 'just now';
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs / 24);
+  return days + 'd ago';
+}
+
+function getDomain(url) {
+  try { return new URL(url).hostname.replace('www.', ''); } catch { return null; }
+}
+
+function getSortedPosts() {
+  const posts = [...state.posts];
+  const now = Date.now();
+  switch (state.sort) {
+    case 'newest': return posts.sort((a, b) => b.created - a.created);
+    case 'top': return posts.sort((a, b) => getScore(b.id) - getScore(a.id) || b.created - a.created);
+    case 'controversial': {
+      const totalVotes = (id) => { let c = 0; for (const k in state.votes) { if (k.startsWith(id + ':')) c++; } return c; };
+      return posts.sort((a, b) => totalVotes(b.id) - totalVotes(a.id) || b.created - a.created);
+    }
+    case 'hot':
+    default:
+      return posts.sort((a, b) => {
+        const hotA = getScore(a.id) / (1 + (now - a.created) / 3600000 * 2);
+        const hotB = getScore(b.id) / (1 + (now - b.created) / 3600000 * 2);
+        return hotB - hotA || b.created - a.created;
+      });
+  }
+}
+
+// --- Render ---
+function render() {
+  const app = document.getElementById('app');
+  if (!state.user) {
+    app.innerHTML = renderLogin();
+    setupLoginEvents();
+  } else {
+    app.innerHTML = renderApp();
+    setupAppEvents();
+  }
+}
+
+function renderLogin() {
+  return `
+    <div class="login-bg">
+      <div class="login-card">
+        <h1>RedditLite</h1>
+        <p>Share ideas, links, and vote on what matters</p>
+        <form id="login-form">
+          <input id="username-input" type="text" placeholder="Choose a username" maxlength="30" autofocus>
+          <button type="submit" id="login-btn" disabled>Enter</button>
+        </form>
+      </div>
+    </div>`;
+}
+
+function renderApp() {
+  const posts = getSortedPosts();
+  return `
+    <header class="header">
+      <div class="header-inner">
+        <span class="logo">RedditLite</span>
+        <div class="user-info">
+          <span>${esc(state.user.username)}</span>
+          <button class="btn-logout" id="logout-btn">Log out</button>
+        </div>
+      </div>
+    </header>
+    <main class="main">
+      ${state.formOpen ? renderPostForm() : `<div class="create-bar"><input id="open-form" type="text" placeholder="Create a post..." readonly></div>`}
+      <div class="sort-bar">
+        ${['hot','newest','top','controversial'].map(s =>
+          `<button class="sort-btn ${state.sort === s ? 'active' : ''}" data-sort="${s}">${s === 'newest' ? 'New' : s.charAt(0).toUpperCase() + s.slice(1)}</button>`
+        ).join('')}
+      </div>
+      ${posts.length === 0 ? '<div class="empty"><p>No posts yet. Be the first to share something!</p></div>' :
+        `<div class="post-list">${posts.map(renderPost).join('')}</div>`}
+    </main>`;
+}
+
+function renderPostForm() {
+  return `
+    <div class="post-form">
+      <div class="tabs">
+        <button class="tab ${state.formType === 'link' ? 'active' : ''}" data-type="link">Link</button>
+        <button class="tab ${state.formType === 'text' ? 'active' : ''}" data-type="text">Text</button>
+      </div>
+      <div class="form-body">
+        <input id="post-title" type="text" placeholder="Title" maxlength="300" autofocus>
+        ${state.formType === 'link'
+          ? '<input id="post-url" type="url" placeholder="URL (e.g. https://example.com)">'
+          : '<textarea id="post-body" placeholder="Text (optional)" rows="4"></textarea>'}
+        <div id="form-error"></div>
+        <div class="form-actions">
+          <button class="btn-cancel" id="cancel-btn">Cancel</button>
+          <button class="btn-post" id="submit-btn" disabled>Post</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderPost(post) {
+  const score = getScore(post.id);
+  const uv = getUserVote(post.id);
+  const domain = post.url ? getDomain(post.url) : null;
+  const isAuthor = state.user.username === post.author;
+
+  return `
+    <div class="post-card">
+      <div class="votes">
+        <button class="vote-btn ${uv === 1 ? 'up-active' : ''}" data-vote="1" data-id="${post.id}" title="Upvote">&#9650;</button>
+        <span class="score ${score > 0 ? 'pos' : score < 0 ? 'neg' : ''}">${score}</span>
+        <button class="vote-btn ${uv === -1 ? 'down-active' : ''}" data-vote="-1" data-id="${post.id}" title="Downvote">&#9660;</button>
+      </div>
+      <div class="post-body">
+        <div class="title-row">
+          ${post.url
+            ? `<a href="${esc(post.url)}" class="post-title" target="_blank" rel="noopener">${esc(post.title)}</a>`
+            : `<span class="post-title">${esc(post.title)}</span>`}
+          ${domain ? `<span class="domain">(${esc(domain)})</span>` : ''}
+        </div>
+        ${post.body ? `<p class="body-text">${esc(post.body)}</p>` : ''}
+        <div class="meta">
+          <span>posted by <strong>${esc(post.author)}</strong></span>
+          <span>${timeAgo(post.created)}</span>
+          ${isAuthor ? `<button class="btn-del" data-del="${post.id}">delete</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// --- Event handlers ---
+function setupLoginEvents() {
+  const input = document.getElementById('username-input');
+  const btn = document.getElementById('login-btn');
+  const form = document.getElementById('login-form');
+  input.addEventListener('input', () => { btn.disabled = !input.value.trim(); });
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const username = input.value.trim();
+    if (!username) return;
+    state.user = { username };
+    STORAGE.setUser(state.user);
+    render();
+  });
+}
+
+function setupAppEvents() {
+  // Logout
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    state.user = null;
+    STORAGE.clearUser();
+    render();
+  });
+
+  // Open form
+  const openBtn = document.getElementById('open-form');
+  if (openBtn) {
+    openBtn.addEventListener('click', () => { state.formOpen = true; render(); });
+  }
+
+  // Form tabs
+  document.querySelectorAll('.tab[data-type]').forEach(t => {
+    t.addEventListener('click', () => { state.formType = t.dataset.type; render(); });
+  });
+
+  // Cancel form
+  const cancelBtn = document.getElementById('cancel-btn');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => { state.formOpen = false; render(); });
+  }
+
+  // Title input enables submit
+  const titleInput = document.getElementById('post-title');
+  const submitBtn = document.getElementById('submit-btn');
+  if (titleInput && submitBtn) {
+    titleInput.addEventListener('input', () => { submitBtn.disabled = !titleInput.value.trim(); });
+    submitBtn.addEventListener('click', () => {
+      const title = titleInput.value.trim();
+      if (!title) return;
+      const url = document.getElementById('post-url')?.value.trim() || '';
+      const body = document.getElementById('post-body')?.value.trim() || '';
+      const post = { id: STORAGE.getNextId(), title, url, body, author: state.user.username, created: Date.now() };
+      state.posts.unshift(post);
+      STORAGE.savePosts(state.posts);
+      state.formOpen = false;
+      render();
+    });
+  }
+
+  // Sort buttons
+  document.querySelectorAll('.sort-btn[data-sort]').forEach(b => {
+    b.addEventListener('click', () => { state.sort = b.dataset.sort; render(); });
+  });
+
+  // Vote buttons
+  document.querySelectorAll('.vote-btn[data-vote]').forEach(b => {
+    b.addEventListener('click', () => {
+      const postId = parseInt(b.dataset.id);
+      const value = parseInt(b.dataset.vote);
+      const key = getVoteKey(postId);
+      if (state.votes[key] === value) {
+        delete state.votes[key]; // toggle off
+      } else {
+        state.votes[key] = value;
+      }
+      STORAGE.saveVotes(state.votes);
+      render();
+    });
+  });
+
+  // Delete buttons
+  document.querySelectorAll('.btn-del[data-del]').forEach(b => {
+    b.addEventListener('click', () => {
+      const id = parseInt(b.dataset.del);
+      state.posts = state.posts.filter(p => p.id !== id);
+      STORAGE.savePosts(state.posts);
+      // Clean up votes for deleted post
+      for (const key in state.votes) {
+        if (key.startsWith(id + ':')) delete state.votes[key];
+      }
+      STORAGE.saveVotes(state.votes);
+      render();
+    });
+  });
+}
+
+// --- Start ---
+render();
+</script>
+</body>
+</html>
